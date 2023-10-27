@@ -88,7 +88,7 @@ def logout():
 @permission_check('create', db)
 def add_book():
     if request.method == 'GET':
-        return render_template('create.html', genres=usecase.load_genres(db))
+        return render_template('create-book.html', genres=usecase.load_genres(db))
 
     file = request.files['book_cover']
 
@@ -133,7 +133,7 @@ def edit_book(book_id):
     if request.method == 'GET':
         book = usecase.load_book(db, book_id)[0]
         genres = usecase.load_genres(db)
-        return render_template('edit.html', genres=genres, book=book)
+        return render_template('edit-book.html', genres=genres, book=book)
 
     title = bleach.clean(request.form['title'])
     short_description = bleach.clean(request.form['short_description'])
@@ -161,7 +161,7 @@ def view_book(book_id):
         been_reviewed = usecase.is_reviewed(book_id, current_user.id, db)
     else:
         been_reviewed = False
-    return render_template('book.html', book=book, description=description_html, reviews=reviews, been_reviewed=been_reviewed)
+    return render_template('view-book.html', book=book, description=description_html, reviews=reviews, been_reviewed=been_reviewed)
 
 
 @app.route('/books/review/<int:book_id>', methods=['POST', 'GET'])
@@ -178,7 +178,7 @@ def review_book(book_id):
             1: "плохо",
             0: "ужасно",
         }
-        return render_template("feedback.html", scores=scores)
+        return render_template("create-feedback.html", scores=scores)
 
     rating = request.form['rating']
     text = request.form['text']
