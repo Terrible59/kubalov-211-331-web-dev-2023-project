@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <form action="{{ url_for('add_book') }}" method="POST" enctype="multipart/form-data">
+        <div class="mb-3">
+          <label for="exampleFormControlInput1" class="form-label">Название книги</label>
+          <input type="text" required class="form-control" name="title" id="exampleFormControlInput1">
+        </div>
+        <div class="mb-3">
+          <label for="exampleFormControlInput3" class="form-label">Год</label>
+          <input type="number" required class="form-control" name="year" id="exampleFormControlInput3">
+        </div>
+        <div class="mb-3">
+          <label for="exampleFormControlInput4" class="form-label">Издательство</label>
+          <input type="text" required class="form-control" name="publisher" id="exampleFormControlInput4">
+        </div>
+         <div class="mb-3">
+          <label for="exampleFormControlInput5" class="form-label">Автор</label>
+          <input type="text" required class="form-control" name="author" id="exampleFormControlInput5">
+        </div>
+         <div class="mb-3">
+          <label for="exampleFormControlInput6" class="form-label">Объем</label>
+          <input type="number" required class="form-control" name="page_count" id="exampleFormControlInput6">
+        </div>
+        <div class="mb-3">
+          <label for="exampleFormControlTextarea1" class="form-label">Жанры</label>
+          <select class="form-select" required multiple aria-label="Multiple select example" name="genres_id">
+              {% for genre in genres %}
+                 <option value="{{genre.id}}">{{genre.name}}</option>
+              {% endfor %}
+            </select>
+        </div>
+        <div class="mb-3">
+          <label for="exampleFormControlTextarea1" class="form-label">Описание книги</label>
+          <textarea class="form-control" id="exampleFormControlTextarea1" required name="short_description" rows="3"></textarea>
+        </div>
+        <div class="mb-3">
+          <label for="formFile" class="form-label">Обложка</label>
+          <input class="form-control" type="file" required id="formFile" name="book_cover">
+        </div>
+        <button class="btn btn-primary" type="submit">Сохранить</button>
+        <div class="mb-4"></div>
+    </form>
+{% endblock %}
+
+{% block scripts %}
+    <script>
+      const easymde = new EasyMDE({
+        element: document.getElementById('exampleFormControlTextarea1'),
+        forceSync: true,
+      });
+    </script>
+{% endblock %}

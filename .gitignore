@@ -1,0 +1,12 @@
+data/*
+
+app/__pycache__
+app/static/*
+app/config.py
+app/fake_migrations
+
+# IDEs
+.vscode/
+.idea/
+
+!.gitkeep

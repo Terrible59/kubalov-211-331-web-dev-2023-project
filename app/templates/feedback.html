@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <form action="{{ url_for('review_book', book_id=request.view_args.book_id) }}" method="POST">
+        <div class="mb-3">
+          <label for="exampleFormControlTextarea1" class="form-label">Оценка</label>
+          <select class="form-select" required aria-label="Multiple select example" name="rating">
+              {% for key, value in scores.items() %}
+                 <option value="{{key}}" {% if key == 5 %} selected {%endif%}>{{value}}</option>
+              {% endfor %}
+            </select>
+        </div>
+        <div class="mb-3">
+          <label for="exampleFormControlTextarea1" class="form-label">Рецензия</label>
+          <textarea class="form-control" id="exampleFormControlTextarea1" required name="text" rows="3"></textarea>
+        </div>
+        <button class="btn btn-primary" type="submit">Сохранить</button>
+        <div class="mb-4"></div>
+    </form>
+{% endblock %}
+
+{% block scripts %}
+    <script>
+      const easymde = new EasyMDE({
+        element: document.getElementById('exampleFormControlTextarea1'),
+        forceSync: true,
+      });
+    </script>
+{% endblock %}

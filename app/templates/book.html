@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="mt-4">
+</div>
+
+<div class="row">
+    <div class="col-3">
+        <img src="/static/{{book.file_name}}" onerror="this.onerror=null; this.src='https://bookstoreromanceday.org/wp-content/uploads/2020/08/book-cover-placeholder.png'" alt="cover" style="width: 100%;">
+    </div>
+    <div class="col-9">
+        <h1 class="d-flex align-items-end">
+            {{book.title}}
+            <div class="d-flex align-items-center mb-2 mx-2" style="font-size: 16px;">
+                <i class="bi bi-star-fill" style="color: rgb(252 211 77);"></i>
+                <span class="mx-2">{{book.average_rating}} <span class="text-muted" style="font-size: 12px;">({{book.reviews_count}} оценили)</span></span>
+            </div>
+        </h1>
+        <h6>Автор: {{ book.author }}</h6>
+        <h6>Год: {{ book.year }}</h6>
+        <h6>Объем: {{ book.page_count }} стр.</h6>
+        <h6>Издательство: {{ book.publisher }}</h6>
+        <h6>Жанры: {{ book.genres }}</h6>
+        <div class="mt-4">
+            {{description | safe}}
+        </div>
+    </div>
+</div>
+
+<div class="mb-4">
+</div>
+
+{% if not been_reviewed and current_user.is_authenticated %}
+<a href="/books/review/{{book.id}}" class="btn btn-primary">Написать рецензию</a>
+{% endif %}
+
+<div class="mt-4">
+    {% for review in reviews %}
+    <div class="card mb-4">
+          <div class="card-body">
+            <h5 class="card-title">{{review.user_name}} {{review.user_last_name}}</h5>
+            <h6 class="card-subtitle mb-2">Оценка: {{review.rating}}</h6>
+            <p class="card-text">{{review.text|markdown}}</p>
+          </div>
+    </div>
+    {% endfor %}
+</div>
+
+{% endblock %}
