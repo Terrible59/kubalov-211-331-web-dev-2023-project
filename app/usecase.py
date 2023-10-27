@@ -188,7 +188,8 @@ def search_books(db, page, title, genres, years, volume_from, volume_to, author)
         query += " AND books.author LIKE %s"
         params.append('%' + author + '%')
 
-    searchQueryEnding = " GROUP BY books.id LIMIT 10 OFFSET " + str(offset)
+    searchQueryEnding = " GROUP BY books.id ORDER BY books.year DESC LIMIT 10 OFFSET " + str(offset)
+    countQueryEnding = "  ORDER BY books.year DESC"
 
     try:
         cursor = db_conn.cursor(named_tuple=True)
@@ -196,7 +197,7 @@ def search_books(db, page, title, genres, years, volume_from, volume_to, author)
         books = cursor.fetchall()
         cursor.close()
         cursor = db_conn.cursor(named_tuple=True)
-        cursor.execute(countQuerySelect + query, params)
+        cursor.execute(countQuerySelect + query + countQueryEnding, params)
         books_count = cursor.fetchall()
         cursor.close()
         return books, int(math.ceil(float(books_count[0].total_books) / float(books_per_page)))

@@ -9,6 +9,7 @@ queryGetBatchBook = '''
     SELECT
         books.id,
         books.title,
+        books.author,
         GROUP_CONCAT(genres.name ORDER BY genres.name ASC) AS genres,
         books.year,
         COALESCE(ROUND(AVG(reviews.rating), 1), 0) AS average_rating,

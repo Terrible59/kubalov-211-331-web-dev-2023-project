@@ -99,17 +99,17 @@
                 <nav class="mt-5">
                   <ul class="pagination">
                     <li class="page-item {% if request.args.get('page') == None or request.args.get('page')|int == 1  %}disabled{%endif%}">
-                      <a class="page-link" href="?page={{ 1 if request.args.get('page') == None else request.args.get('page')|int - 1 }}" tabindex="-1">Предыдущая</a>
+                      <a class="page-link" href="?page={{ 1 if request.args.get('page') == None else request.args.get('page')|int - 1 }}{% for arg in request.args.items() %}{{("&" + arg[0] + "=" + arg[1]) if arg[0] != 'page' else "" }}{% endfor %}" tabindex="-1">Предыдущая</a>
                     </li>
                       {%for page in range(1, pages_count + 1)%}
                         <li class="page-item {% if (request.args.get('page')|int == page) or (request.args.get('page') == None and page == 1) %}active{%endif%}">
-                          <a class="page-link" href="?page={{page}}">
+                          <a class="page-link" href="?page={{page}}{% for arg in request.args.items() %}{{("&" + arg[0] + "=" + arg[1]) if arg[0] != 'page' else "" }}{% endfor %}">
                               {{page}}
                           </a>
                         </li>
                       {%endfor%}
                     <li class="page-item {% if (request.args.get('page')|int == pages_count) or (pages_count == 1) %}disabled{%endif%}">
-                      <a class="page-link" href="?page={{ 2 if request.args.get('page') == None else request.args.get('page')|int + 1 }}">Следующая</a>
+                      <a class="page-link" href="?page={{ 2 if request.args.get('page') == None else request.args.get('page')|int + 1 }}{% for arg in request.args.items() %}{{("&" + arg[0] + "=" + arg[1]) if arg[0] != 'page' else "" }}{% endfor %}">Следующая</a>
                     </li>
                   </ul>
                 </nav>
