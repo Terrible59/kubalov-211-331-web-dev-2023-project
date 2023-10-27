@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash
+from flask import Flask, render_template, request, redirect, url_for, flash, abort
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 import markdown
 
@@ -155,6 +155,8 @@ def edit_book(book_id):
 @app.route('/books/view/<int:book_id>', methods=['GET'])
 def view_book(book_id):
     book = usecase.get_book(db, book_id)[0]
+    if not book or not book.short_description:
+        abort(404)
     description_html = markdown.markdown(book.short_description)
     reviews = usecase.get_reviews(db, book_id)
     if current_user and current_user.is_authenticated:
@@ -191,6 +193,9 @@ def review_book(book_id):
 
     return redirect(url_for('index'))
 
+@app.errorhandler(404)
+def page_not_found(error):
+   return render_template('404.html', title = '404'), 404
 
 if __name__ == '__main__':
     app.run(debug=True)
