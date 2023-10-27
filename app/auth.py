@@ -52,7 +52,7 @@ def permission_check(action, db):
                 user = load_user(user_id, db)
             if not current_user.can(action, user):
                 flash('Недостаточно прав для выполнения данного действия.', 'warning')
-                return redirect(url_for('users'))
+                return redirect(url_for('index'))
             return function(*args, **kwargs)
 
         return wrapper
