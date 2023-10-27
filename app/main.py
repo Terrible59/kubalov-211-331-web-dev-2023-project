@@ -158,10 +158,10 @@ def view_book(book_id):
     description_html = markdown.markdown(book.short_description)
     reviews = usecase.get_reviews(db, book_id)
     if current_user and current_user.is_authenticated:
-        been_reviewed = usecase.is_reviewed(book_id, current_user.id, db)
+        review = usecase.is_reviewed(book_id, current_user.id, db)
     else:
-        been_reviewed = False
-    return render_template('view-book.html', book=book, description=description_html, reviews=reviews, been_reviewed=been_reviewed)
+        review = ()
+    return render_template('view-book.html', book=book, description=description_html, reviews=reviews, review=review)
 
 
 @app.route('/books/review/<int:book_id>', methods=['POST', 'GET'])

@@ -30,8 +30,13 @@
 <div class="mb-4">
 </div>
 
-{% if not been_reviewed and current_user.is_authenticated %}
+{% if review|length == 0 and current_user.is_authenticated %}
 <a href="/books/review/{{book.id}}" class="btn btn-primary">Написать рецензию</a>
+{% elif review|length != 0 %}
+    <h3>Ваша рецензия:</h3>
+    <div>
+        {{review.text|markdown}}
+    </div>
 {% endif %}
 
 <div class="mt-4">

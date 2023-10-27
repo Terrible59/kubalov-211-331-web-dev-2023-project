@@ -285,7 +285,7 @@ def is_reviewed(book_id, user_id, db):
     except mysql.connector.Error as err:
         print("Something went wrong: {}".format(err))
         db_conn.rollback()
-        return []
+        return ()
 
     return text
 
