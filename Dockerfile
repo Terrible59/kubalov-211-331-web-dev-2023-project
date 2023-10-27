@@ -10,4 +10,4 @@ COPY ./app /code/app
 
 WORKDIR /code/app
 
-CMD ["flask", "--app", "main", "run", "--debug", "-p", "8006", "-h", "0.0.0.0"]
+CMD ["flask", "--app", "main", "run", "-p", "8006", "-h", "0.0.0.0"]
