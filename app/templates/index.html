@@ -29,7 +29,7 @@
                     </div>
                     <div class="mb-3">
                       <label class="form-label">Жанры</label>
-                      <select class="form-select" multiple aria-label="Multiple select example" name="genres">
+                      <select class="form-select selectpicker" multiple aria-label="Multiple select example" name="genres">
                           {% for genre in genres %}
                              <option value="{{genre.id}}" {% if genre.id|string in request.args.getlist('genres') %} selected {% endif %}>{{genre.name}}</option>
                           {% endfor %}
@@ -37,7 +37,7 @@
                     </div>
                     <div class="mb-3">
                       <label class="form-label">Год</label>
-                      <select class="form-select" multiple aria-label="Multiple select example" name="years">
+                      <select class="form-select selectpicker" multiple aria-label="Multiple select example" name="years">
                           {% for year in years %}
                              <option value="{{year.year}}" {% if year.year|string in request.args.getlist('years') %} selected {% endif %}>{{year.year}}</option>
                           {% endfor %}

@@ -8,6 +8,137 @@ import math
 
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 
+def get_years(db):
+    db_conn = db.connection()
+    try:
+        cursor = db_conn.cursor(named_tuple=True)
+        cursor.execute(sql_queries.queryGetAllYears, ())
+        years = cursor.fetchall()
+        cursor.close()
+        return years
+    except mysql.connector.Error as err:
+        print("Something went wrong: {}".format(err))
+        return []
+
+def get_reviews(db, book_id):
+    db_conn = db.connection()
+    try:
+        cursor = db_conn.cursor(named_tuple=True)
+        cursor.execute(sql_queries.queryGetBookReviews, (book_id,))
+        reviews = cursor.fetchall()
+        cursor.close()
+        return reviews
+    except mysql.connector.Error as err:
+        print("Something went wrong: {}".format(err))
+        raise err
+        return []
+
+def get_genres(db):
+    db_conn = db.connection()
+    try:
+        cursor = db_conn.cursor(named_tuple=True)
+        cursor.execute(sql_queries.queryGetAllGenres)
+        genres = cursor.fetchall()
+        cursor.close()
+        return genres
+    except mysql.connector.Error as err:
+        print("Something went wrong: {}".format(err))
+        db_conn.rollback()
+        return []
+
+def get_books(db, page):
+    db_conn = db.connection()
+    books_per_page = 10
+    try:
+        offset = (page - 1) * books_per_page
+        cursor = db_conn.cursor(named_tuple=True)
+        cursor.execute(sql_queries.queryGetBatchBook, (offset,))
+        books = cursor.fetchall()
+        cursor.close()
+        cursor = db_conn.cursor(named_tuple=True)
+        cursor.execute(sql_queries.queryGetBatchBookCount, ())
+        books_count = cursor.fetchall()
+        cursor.close()
+        return books, int(math.ceil(float(books_count[0].total_books) / float(books_per_page)))
+    except mysql.connector.Error as err:
+        print("Something went wrong: {}".format(err))
+        db_conn.rollback()
+        raise err
+        return [], 0
+
+def get_book(db, book_id):
+    db_conn = db.connection()
+    try:
+        cursor = db_conn.cursor(named_tuple=True)
+        cursor.execute(sql_queries.queryGetBookByID, (book_id,))
+        book = cursor.fetchall()
+        cursor.close()
+        return book
+    except mysql.connector.Error as err:
+        print("Something went wrong: {}".format(err))
+        db_conn.rollback()
+        return []
+
+def create_book(file, title, short_description, year, publisher, author, page_count, genres_ids, db, save_path) -> bool:
+    db_conn = db.connection()
+
+    file.name = uuid.uuid4()
+    if _allowed_file(file.filename):
+        try:
+            md5_hash = hashlib.md5()
+            for batch in iter(lambda: file.stream.read(4096), b""):
+                md5_hash.update(batch)
+            file.stream.seek(0)
+
+            filename = secure_filename(file.filename)
+            hex_hash = md5_hash.hexdigest()
+            mime_type = file.mimetype
+
+            cursor = db_conn.cursor(named_tuple=True)
+            cursor.execute(sql_queries.queryGetCoverIDAndFileNameByHash, (hex_hash,))
+
+            existing_record = cursor.fetchone()
+            if not existing_record:
+                try:
+                    if not os.path.exists(save_path):
+                        os.makedirs(save_path)
+                    file.save(os.path.join(save_path, filename))
+                except Exception as e:
+                    raise e
+                    return False
+
+                cursor.execute(sql_queries.querySetCover, (filename, mime_type, hex_hash))
+                db_conn.commit()
+
+                cursor.execute(sql_queries.queryGetCoverIDAndFileNameByHash, (hex_hash,))
+                cover_record = cursor.fetchone()
+            else:
+                cover_record = existing_record
+
+            cursor.execute(
+                sql_queries.querySetBooks,
+                (title, short_description, year, publisher, author, page_count, cover_record[0])
+            )
+            db_conn.commit()
+
+            cursor.execute(sql_queries.queryGetLastBookID)
+            last_book_id = cursor.fetchone()[0]
+
+            for genres_id in genres_ids:
+                cursor.execute(sql_queries.querySetBookIDAndGenresID, (last_book_id, genres_id))
+                db_conn.commit()
+
+            cursor.close()
+
+        except mysql.connector.Error as err:
+            print("Something went wrong: {}".format(err))
+            db_conn.rollback()
+            return False
+    else:
+        return False
+
+    return True
+
 def search_books(db, page, title, genres, years, volume_from, volume_to, author):
     db_conn = db.connection()
     books_per_page = 10
@@ -73,141 +204,7 @@ def search_books(db, page, title, genres, years, volume_from, volume_to, author)
         print("Something went wrong: {}".format(err))
         return [], 0
 
-def load_years(db):
-    db_conn = db.connection()
-    try:
-        cursor = db_conn.cursor(named_tuple=True)
-        cursor.execute(sql_queries.queryGetAllYears, ())
-        years = cursor.fetchall()
-        cursor.close()
-        return years
-    except mysql.connector.Error as err:
-        print("Something went wrong: {}".format(err))
-        return []
-
-def load_reviews(db, book_id):
-    db_conn = db.connection()
-    try:
-        cursor = db_conn.cursor(named_tuple=True)
-        cursor.execute(sql_queries.queryGetBookReviews, (book_id,))
-        reviews = cursor.fetchall()
-        cursor.close()
-        return reviews
-    except mysql.connector.Error as err:
-        print("Something went wrong: {}".format(err))
-        raise err
-        return []
-
-def load_books(db, page):
-    db_conn = db.connection()
-    books_per_page = 10
-    try:
-        offset = (page - 1) * books_per_page
-        cursor = db_conn.cursor(named_tuple=True)
-        cursor.execute(sql_queries.queryGetBatchBook, (offset,))
-        books = cursor.fetchall()
-        cursor.close()
-        cursor = db_conn.cursor(named_tuple=True)
-        cursor.execute(sql_queries.queryGetBatchBookCount, ())
-        books_count = cursor.fetchall()
-        cursor.close()
-        return books, int(math.ceil(float(books_count[0].total_books) / float(books_per_page)))
-    except mysql.connector.Error as err:
-        print("Something went wrong: {}".format(err))
-        db_conn.rollback()
-        raise err
-        return [], 0
-
-def load_genres(db):
-    db_conn = db.connection()
-    try:
-        cursor = db_conn.cursor(named_tuple=True)
-        cursor.execute(sql_queries.queryGetAllGenres)
-        genres = cursor.fetchall()
-        cursor.close()
-        return genres
-    except mysql.connector.Error as err:
-        print("Something went wrong: {}".format(err))
-        db_conn.rollback()
-        return []
-
-def load_book(db, book_id):
-    db_conn = db.connection()
-    try:
-        cursor = db_conn.cursor(named_tuple=True)
-        cursor.execute(sql_queries.queryGetBookByID, (book_id,))
-        book = cursor.fetchall()
-        cursor.close()
-        return book
-    except mysql.connector.Error as err:
-        print("Something went wrong: {}".format(err))
-        db_conn.rollback()
-        return []
-
-def add_book(file, title, short_description, year, publisher, author, page_count, genres_ids, db, save_path) -> bool:
-    db_conn = db.connection()
-
-    file.name = uuid.uuid4()
-    if _allowed_file(file.filename):
-        try:
-            md5_hash = hashlib.md5()
-            for batch in iter(lambda: file.stream.read(4096), b""):
-                md5_hash.update(batch)
-            file.stream.seek(0)
-
-            filename = secure_filename(file.filename)
-            hex_hash = md5_hash.hexdigest()
-            mime_type = file.mimetype
-
-            cursor = db_conn.cursor(named_tuple=True)
-            cursor.execute(sql_queries.queryGetCoverIDAndFileNameByHash, (hex_hash,))
-
-            existing_record = cursor.fetchone()
-            if not existing_record:
-                try:
-                    if not os.path.exists(save_path):
-                        os.makedirs(save_path)
-                    file.save(os.path.join(save_path, filename))
-                except Exception as e:
-                    raise e
-                    return False
-
-                cursor.execute(sql_queries.querySetCover, (filename, mime_type, hex_hash))
-                db_conn.commit()
-
-                cursor.execute(sql_queries.queryGetCoverIDAndFileNameByHash, (hex_hash,))
-                cover_record = cursor.fetchone()
-            else:
-                cover_record = existing_record
-
-            cursor.execute(
-                sql_queries.querySetBooks,
-                (title, short_description, year, publisher, author, page_count, cover_record[0])
-            )
-            db_conn.commit()
-
-            cursor.execute(sql_queries.queryGetLastBookID)
-            last_book_id = cursor.fetchone()[0]
-
-            for genres_id in genres_ids:
-                cursor.execute(sql_queries.querySetBookIDAndGenresID, (last_book_id, genres_id))
-                db_conn.commit()
-
-            cursor.close()
-
-        except mysql.connector.Error as err:
-            print("Something went wrong: {}".format(err))
-            db_conn.rollback()
-            return False
-    else:
-        return False
-
-    return True
-
-def _allowed_file(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
-def delete_book_by_id(book_id, db, save_path) -> bool:
+def delete_book(book_id, db, save_path) -> bool:
     db_conn = db.connection()
     try:
         cursor = db_conn.cursor(named_tuple=True)
@@ -304,3 +301,6 @@ def set_review(db, book_id, user_id, rating, text):
         return False
 
     return True
+
+def _allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS

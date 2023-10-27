@@ -34,10 +34,10 @@ init_login_manager(app, db)
 def index():
     page = request.args.get('page', default=1, type=int)
 
-    books_list, pages_count = usecase.load_books(db, page)
+    books_list, pages_count = usecase.get_books(db, page)
 
-    genres = usecase.load_genres(db)
-    years = usecase.load_years(db)
+    genres = usecase.get_genres(db)
+    years = usecase.get_years(db)
 
     if len(request.args) > 1 or (len(request.args) == 1 and not page):
         books_list, pages_count = usecase.search_books(
@@ -88,7 +88,7 @@ def logout():
 @permission_check('create', db)
 def add_book():
     if request.method == 'GET':
-        return render_template('create-book.html', genres=usecase.load_genres(db))
+        return render_template('create-book.html', genres=usecase.get_genres(db))
 
     file = request.files['book_cover']
 
@@ -100,7 +100,7 @@ def add_book():
     page_count = bleach.clean(request.form['page_count'])
     genres_id = request.form.getlist('genres_id')
 
-    is_insert = usecase.add_book(
+    is_insert = usecase.create_book(
         file, title, short_description,
         year, publisher, author, page_count,
         genres_id, db, app.config['UPLOAD_FOLDER']
@@ -117,7 +117,7 @@ def add_book():
 @login_required
 @permission_check('delete', db)
 def delete_book(book_id):
-    is_delete = usecase.delete_book_by_id(book_id, db, app.config['UPLOAD_FOLDER'])
+    is_delete = usecase.delete_book(book_id, db, app.config['UPLOAD_FOLDER'])
     if is_delete:
         flash('Вы успешно удалили книгу!', 'success')
     else:
@@ -131,8 +131,8 @@ def delete_book(book_id):
 @permission_check('edit', db)
 def edit_book(book_id):
     if request.method == 'GET':
-        book = usecase.load_book(db, book_id)[0]
-        genres = usecase.load_genres(db)
+        book = usecase.get_book(db, book_id)[0]
+        genres = usecase.get_genres(db)
         return render_template('edit-book.html', genres=genres, book=book)
 
     title = bleach.clean(request.form['title'])
@@ -154,9 +154,9 @@ def edit_book(book_id):
 
 @app.route('/books/view/<int:book_id>', methods=['GET'])
 def view_book(book_id):
-    book = usecase.load_book(db, book_id)[0]
+    book = usecase.get_book(db, book_id)[0]
     description_html = markdown.markdown(book.short_description)
-    reviews = usecase.load_reviews(db, book_id)
+    reviews = usecase.get_reviews(db, book_id)
     if current_user and current_user.is_authenticated:
         been_reviewed = usecase.is_reviewed(book_id, current_user.id, db)
     else:
